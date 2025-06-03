@@ -24,7 +24,7 @@ def limpiar_texto(texto, tipo='pregunta'):
             return texto_limpio
     else:  # tipo == 'respuesta'
         # Remueve A), B), C), D) del inicio
-        if texto.startswith(('A)', 'B)', 'C)', 'D)')):
+        if texto.startswith(('A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)')):
             texto_limpio = texto[2:].strip()
             # Eliminar guiones al inicio si existen
             if texto_limpio.startswith('-'):
@@ -58,17 +58,19 @@ def leer_docx(ruta_archivo):
                     respuestas_actuales = ['', '', '', '']
                     respuesta_correcta_actual = ''
                 # Si empieza con A), B), C) o D), es una respuesta
-                elif any(texto.startswith(prefix) for prefix in ['A)', 'B)', 'C)', 'D)']):
-                    # Procesar cada línea de respuesta
-                    for run in parrafo.runs:
-                        # Verificar si el texto está resaltado
-                        if run.font.highlight_color:
-                            # Limpiar y convertir la respuesta correcta a número
-                            texto_resaltado = run.text.strip()
-                            if texto_resaltado:
-                                respuesta_correcta_actual = letra_a_numero(texto_resaltado)
-                            break
+                elif any(texto.startswith(prefix) for prefix in ['A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)']):
+                    # Variable para almacenar la letra de la opción actual
+                    opcion_actual = texto[0].upper()
                     
+                    # Procesar cada línea de respuesta y buscar texto resaltado o en negrita
+                    for run in parrafo.runs:
+                        # Si encontramos texto resaltado o en negrita, guardamos esa opción como correcta
+                        if run.font.highlight_color or run.font.bold:
+                            # Obtener la letra de la opción que contiene el texto resaltado/negrita
+                            if any(prefix in run.text for prefix in [f'{opcion_actual})', f'{opcion_actual.lower()}']):
+                                respuesta_correcta_actual = letra_a_numero(opcion_actual)
+                                break
+                    # Procesar el texto de la respuesta
                     lineas = texto.split('\n')
                     for linea in lineas:
                         linea = linea.strip()
@@ -80,6 +82,14 @@ def leer_docx(ruta_archivo):
                             elif linea.startswith('C)'):
                                 respuestas_actuales[2] = limpiar_texto(linea, 'respuesta')
                             elif linea.startswith('D)'):
+                                respuestas_actuales[3] = limpiar_texto(linea, 'respuesta')
+                            elif linea.startswith('a)'):
+                                respuestas_actuales[0] = limpiar_texto(linea, 'respuesta')
+                            elif linea.startswith('b)'):
+                                respuestas_actuales[1] = limpiar_texto(linea, 'respuesta')
+                            elif linea.startswith('c)'):
+                                respuestas_actuales[2] = limpiar_texto(linea, 'respuesta')
+                            elif linea.startswith('d)'):
                                 respuestas_actuales[3] = limpiar_texto(linea, 'respuesta')
 
         # Guardar la última pregunta y sus respuestas

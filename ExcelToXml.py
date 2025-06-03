@@ -2,6 +2,7 @@ import pandas as pd
 from xml.etree import ElementTree as ET
 from xml.dom import minidom
 import argparse
+from time import sleep
 
 def read_excel_file(file_path):
     try:
@@ -136,7 +137,8 @@ def main():
         # Convertir a XML
         xml_data = convert_to_xml(dict_records, args.salida)
         if xml_data:
-            print(f"\nArchivo XML creado exitosamente: {args.salida}")
+            print(f"\nArchivo XML creado exitosamente: {args.salida} y se crearos: {len(dict_records)} preguntas.")
+            sleep(5) 
 
 if __name__ == "__main__":
     main()
