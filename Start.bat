@@ -1,5 +1,5 @@
-python WordToExcel.py "T8.03 SERGAS TCAE.docx" -s "T8.03 SERGAS TCAE.xlsx"
-python ExcelToXml.py -e "T8.03 SERGAS TCAE.xlsx" -s "T8.03 SERGAS TCAE.xml"
+# python WordToExcel.py "1.docx" -s "1.xlsx"
+python ExcelToXml.py -e "1.xlsx" -s "1.xml"
 
 
 

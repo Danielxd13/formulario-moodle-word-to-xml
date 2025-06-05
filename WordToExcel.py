@@ -14,14 +14,21 @@ def letra_a_numero(letra):
 def limpiar_texto(texto, tipo='pregunta'):
     """Limpia el texto removiendo números iniciales, guiones y letras con paréntesis"""
     if tipo == 'pregunta':
-        # Busca el primer punto y espacio después del número
-        if '.' in texto and texto[0].isdigit():
-            inicio = texto.find('.') + 1
-            texto_limpio = texto[inicio:].strip()
-            # Eliminar guiones al inicio si existen
-            if texto_limpio.startswith('-'):
-                texto_limpio = texto_limpio.lstrip('- ')
-            return texto_limpio
+        # Buscar el primer dígito
+        if texto[0].isdigit():
+            # Encontrar el final del formato de numeración
+            for i, char in enumerate(texto):
+                if char in ['.', ')', '-'] and i > 0:
+                    # Si encuentra un guión o punto después del número
+                    inicio = i + 1
+                    # Si hay un espacio después del separador, saltar el espacio
+                    if inicio < len(texto) and texto[inicio] == ' ':
+                        inicio += 1
+                    texto_limpio = texto[inicio:].strip()
+                    # Eliminar guiones adicionales al inicio si existen
+                    if texto_limpio.startswith('-'):
+                        texto_limpio = texto_limpio.lstrip('- ')
+                    return texto_limpio
     else:  # tipo == 'respuesta'
         # Remueve A), B), C), D) del inicio
         if texto.startswith(('A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)')):
@@ -46,8 +53,16 @@ def leer_docx(ruta_archivo):
             texto = parrafo.text.strip()
             
             if texto:
-                # Si empieza con número y punto, es una pregunta
-                if texto[0].isdigit() and ( '. ' in texto or '.' in texto ):
+                # Verificar si es una pregunta con diferentes formatos de numeración
+                es_pregunta = False
+                if texto[0].isdigit():
+                    # Buscar diferentes formatos después del número
+                    for separador in ['. ', '.', ')', '.-']:
+                        if separador in texto[:4]:  # Buscar en los primeros 4 caracteres
+                            es_pregunta = True
+                            break
+                
+                if es_pregunta:
                     # Guardar la pregunta, respuestas y respuesta correcta anteriores si existen
                     if pregunta_actual:
                         preguntas.append(limpiar_texto(pregunta_actual, 'pregunta'))
@@ -62,11 +77,13 @@ def leer_docx(ruta_archivo):
                     # Variable para almacenar la letra de la opción actual
                     opcion_actual = texto[0].upper()
                     
-                    # Procesar cada línea de respuesta y buscar texto resaltado o en negrita
+                    # Procesar cada línea de respuesta y buscar texto resaltado, negrita o subrayado
                     for run in parrafo.runs:
-                        # Si encontramos texto resaltado o en negrita, guardamos esa opción como correcta
-                        if run.font.highlight_color or run.font.bold:
-                            # Obtener la letra de la opción que contiene el texto resaltado/negrita
+                        # Si encontramos texto resaltado, negrita o subrayado, guardamos esa opción como correcta
+                        if (run.font.highlight_color or 
+                            run.font.bold or 
+                            run.font.underline):  # Añadimos la detección de subrayado
+                            # Obtener la letra de la opción que contiene el formato especial
                             if any(prefix in run.text for prefix in [f'{opcion_actual})', f'{opcion_actual.lower()}']):
                                 respuesta_correcta_actual = letra_a_numero(opcion_actual)
                                 break
