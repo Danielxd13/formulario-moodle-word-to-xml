@@ -56,58 +56,32 @@ def leer_docx(ruta_archivo):
                 # Verificar si es una pregunta con diferentes formatos de numeración
                 es_pregunta = False
                 if texto[0].isdigit():
-                    # Buscar diferentes formatos después del número
                     for separador in ['. ', '.', ')', '.-']:
-                        if separador in texto[:4]:  # Buscar en los primeros 4 caracteres
+                        if separador in texto[:4]:
                             es_pregunta = True
                             break
-                
+
+                # Detectar si es una viñeta o numeración automática
+                es_vineta = parrafo.style.name.lower().startswith('list') or parrafo._p.pPr is not None and parrafo._p.pPr.numPr is not None
+
                 if es_pregunta:
-                    # Guardar la pregunta, respuestas y respuesta correcta anteriores si existen
                     if pregunta_actual:
                         preguntas.append(limpiar_texto(pregunta_actual, 'pregunta'))
                         respuestas.append(respuestas_actuales)
                         respuestas_correctas.append(respuesta_correcta_actual)
-                    # Iniciar nueva pregunta
                     pregunta_actual = texto
                     respuestas_actuales = ['', '', '', '']
                     respuesta_correcta_actual = ''
-                # Si empieza con A), B), C) o D), es una respuesta
-                elif any(texto.startswith(prefix) for prefix in ['A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)']):
-                    # Variable para almacenar la letra de la opción actual
-                    opcion_actual = texto[0].upper()
-                    
-                    # Procesar cada línea de respuesta y buscar texto resaltado, negrita o subrayado
+                    respuesta_idx = 0  # Nuevo: índice para respuestas
+                elif any(texto.startswith(prefix) for prefix in ['A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)']) or es_vineta:
+                    # Si es viñeta o respuesta clásica, agregar como respuesta
+                    if respuesta_idx < 4:
+                        respuestas_actuales[respuesta_idx] = limpiar_texto(texto, 'respuesta')
+                        respuesta_idx += 1
+                    # Detección de respuesta correcta igual que antes...
                     for run in parrafo.runs:
-                        # Si encontramos texto resaltado, negrita o subrayado, guardamos esa opción como correcta
-                        if (run.font.highlight_color or 
-                            run.font.bold or 
-                            run.font.underline):  # Añadimos la detección de subrayado
-                            # Obtener la letra de la opción que contiene el formato especial
-                            if any(prefix in run.text for prefix in [f'{opcion_actual})', f'{opcion_actual.lower()}']):
-                                respuesta_correcta_actual = letra_a_numero(opcion_actual)
-                                break
-                    # Procesar el texto de la respuesta
-                    lineas = texto.split('\n')
-                    for linea in lineas:
-                        linea = linea.strip()
-                        if linea:
-                            if linea.startswith('A)'):
-                                respuestas_actuales[0] = limpiar_texto(linea, 'respuesta')
-                            elif linea.startswith('B)'):
-                                respuestas_actuales[1] = limpiar_texto(linea, 'respuesta')
-                            elif linea.startswith('C)'):
-                                respuestas_actuales[2] = limpiar_texto(linea, 'respuesta')
-                            elif linea.startswith('D)'):
-                                respuestas_actuales[3] = limpiar_texto(linea, 'respuesta')
-                            elif linea.startswith('a)'):
-                                respuestas_actuales[0] = limpiar_texto(linea, 'respuesta')
-                            elif linea.startswith('b)'):
-                                respuestas_actuales[1] = limpiar_texto(linea, 'respuesta')
-                            elif linea.startswith('c)'):
-                                respuestas_actuales[2] = limpiar_texto(linea, 'respuesta')
-                            elif linea.startswith('d)'):
-                                respuestas_actuales[3] = limpiar_texto(linea, 'respuesta')
+                        if (run.font.highlight_color or run.font.bold or run.font.underline):
+                            respuesta_correcta_actual = respuesta_idx  # O ajusta según tu lógica
 
         # Guardar la última pregunta y sus respuestas
         if pregunta_actual:
