@@ -31,7 +31,7 @@ def limpiar_texto(texto, tipo='pregunta'):
                     return texto_limpio
     else:  # tipo == 'respuesta'
         # Remueve A), B), C), D) del inicio
-        if texto.startswith(('A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)')):
+        if texto.startswith(('A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)', 'o A) ', 'o B) ', 'o C) ', 'o D) ', 'o a) ', 'o b) ', 'o c) ', 'o d) ')):
             texto_limpio = texto[2:].strip()
             # Eliminar guiones al inicio si existen
             if texto_limpio.startswith('-'):
@@ -73,7 +73,7 @@ def leer_docx(ruta_archivo):
                     respuestas_actuales = ['', '', '', '']
                     respuesta_correcta_actual = ''
                     respuesta_idx = 0  # Nuevo: índice para respuestas
-                elif any(texto.startswith(prefix) for prefix in ['A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)']) or es_vineta:
+                elif any(texto.startswith(prefix) for prefix in ['A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)', 'o A)', 'o B)', 'o C)', 'o D)', 'o a)', 'o b)', 'o c)', 'o d)']) or es_vineta:
                     # Si es viñeta o respuesta clásica, agregar como respuesta
                     if respuesta_idx < 4:
                         respuestas_actuales[respuesta_idx] = limpiar_texto(texto, 'respuesta')
