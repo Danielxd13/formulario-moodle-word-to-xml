@@ -48,21 +48,25 @@ def leer_docx(ruta_archivo):
         pregunta_actual = ""
         respuestas_actuales = ['', '', '', '']
         respuesta_correcta_actual = ''  # Variable para almacenar la respuesta correcta
+        respuesta_idx = 0  # Inicializar el índice de respuesta fuera del bucle
 
         for parrafo in doc.paragraphs:
             texto = parrafo.text.strip()
             
             if texto:
-                # Verificar si es una pregunta con diferentes formatos de numeración
+                # Detectar si es una viñeta o numeración automática
+                es_vineta = parrafo.style.name.lower().startswith('list') or (parrafo._p.pPr is not None and parrafo._p.pPr.numPr is not None)
+
+                # Verificar si es una pregunta con diferentes formatos de numeración o lista numerada
                 es_pregunta = False
                 if texto[0].isdigit():
                     for separador in ['. ', '.', ')', '.-']:
                         if separador in texto[:4]:
                             es_pregunta = True
                             break
-
-                # Detectar si es una viñeta o numeración automática
-                es_vineta = parrafo.style.name.lower().startswith('list') or parrafo._p.pPr is not None and parrafo._p.pPr.numPr is not None
+                # Si es una lista numerada y no una viñeta de respuestas, también es pregunta
+                if es_vineta and not any(texto.startswith(prefix) for prefix in ['A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)', 'o A)', 'o B)', 'o C)', 'o D)', 'o a)', 'o b)', 'o c)', 'o d)']):
+                    es_pregunta = True
 
                 if es_pregunta:
                     if pregunta_actual:
@@ -72,16 +76,16 @@ def leer_docx(ruta_archivo):
                     pregunta_actual = texto
                     respuestas_actuales = ['', '', '', '']
                     respuesta_correcta_actual = ''
-                    respuesta_idx = 0  # Nuevo: índice para respuestas
+                    respuesta_idx = 0  # Reiniciar el índice para las respuestas
                 elif any(texto.startswith(prefix) for prefix in ['A)', 'B)', 'C)', 'D)', 'a)', 'b)', 'c)', 'd)', 'o A)', 'o B)', 'o C)', 'o D)', 'o a)', 'o b)', 'o c)', 'o d)']) or es_vineta:
                     # Si es viñeta o respuesta clásica, agregar como respuesta
                     if respuesta_idx < 4:
                         respuestas_actuales[respuesta_idx] = limpiar_texto(texto, 'respuesta')
+                        # Detección de respuesta correcta igual que antes...
+                        for run in parrafo.runs:
+                            if (run.font.highlight_color or run.font.bold or run.font.underline):
+                                respuesta_correcta_actual = respuesta_idx + 1  # +1 para que sea 1,2,3,4
                         respuesta_idx += 1
-                    # Detección de respuesta correcta igual que antes...
-                    for run in parrafo.runs:
-                        if (run.font.highlight_color or run.font.bold or run.font.underline):
-                            respuesta_correcta_actual = respuesta_idx  # O ajusta según tu lógica
 
         # Guardar la última pregunta y sus respuestas
         if pregunta_actual:

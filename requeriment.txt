@@ -1,1 +1,2 @@
 pip install python-docx openpyxl pandas
+pip install pdfplumber openpyxl
